@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>GraphicsTown JS 2015!</title>
+</head>
+<body>
+<!-- load this stuff first -->
+<script src="Libraries/twgl-full.js"></script>
+<script src="objParser.js"></script>
+
+
+<script src="Libraries/panel.js"></script>
+<script src="Libraries/arcball.js"></script>
+<script src="grobject.js"></script>
+
+<script src="Ground/ground2.js"></script>
+<script src="Hangar/hangar1.js"></script>
+<script src="Building/Office/office.js"></script>
+<script src="Building/Graffiti/grafwall1.js"></script>
+
+<script src="ExampleObjects/umbrella.js"></script>
+<script src="ExampleObjects/sat1.js"></script>
+
+<script src="Decal/decal2.js"></script>
+
+<!--
+<script src="Decal/floor_below.js"></script>
+
+<script src="Cube/test.js"></script>
+<script src="Cube/test2.js"></script>
+<script src="Cube/test3.js"></script>
+
+<script src="Cube/house.js"></script>
+<script src="Cube/cube.js"></script>
+
+<script src="ExampleObjects/ground.js"></script>
+<script src="House/house.js"></script>
+<script src="ExampleObjects/cube.js"></script>
+
+
+<script src="ExampleObjects/umbrella.js"></script>
+<script src="ExampleObjects/barfi.js"></script>
+
+<script src="House/house.js"></script>
+<script src="ExampleObjects/cube3.js"></script>
+<script src="ExampleObjects/cube5.js"></script>
+<script src="ExampleObjects/cube4.js"></script>
+<script src="ExampleObjects/cube6.js"></script>
+<script src="ExampleObjects/texturedplane.js"></script>
+
+<script src="ExampleObjects/cube.js"></script>
+<script src="ExampleObjects/barfi.js"></script>
+<script src="ExampleObjects/sat1.js"></script>
+<script src="ExampleObjects/cube2.js"></script>
+<script src="ExampleObjects/texturedplane.js"></script>
+<script src="ExampleObjects/cube3.js"></script>
+<script src="ExampleObjects/cube5.js"></script>
+<script src="ExampleObjects/cube4.js"></script>
+<script src="ExampleObjects/barfi.js"></script>
+-->
+<script src="graphicstown.js"></script>
+</body>
+
+<script id="test-vs" type="notjs">
+    precision highp float;
+
+    attribute vec3 vpos;
+    attribute vec3 vnormal;
+	attribute vec2 uvs;
+	
+    varying vec3 outColor;
+	varying vec2 fTexCoord;
+	
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform mat4 model;
+    uniform vec3 lightdir;
+    uniform vec3 cubecolor;
+
+    void main(void) {
+        gl_Position = proj * view * model * vec4(vpos, 1.0);
+        vec4 normal = normalize(model * vec4(vnormal,0.0));
+        float diffuse;
+		float dot1=abs(dot(normal, vec4(lightdir,0.0)));
+		if(lightdir.y>=0.0)
+		{
+			if(dot(normal, vec4(lightdir,0.0))>=0.0)
+			{diffuse = 0.2 + 0.4*abs(dot(normal, vec4(lightdir,0.0)))+0.4*dot1*dot1*dot1;}
+		}
+		else
+		{diffuse=0.2;}
+		fTexCoord=uvs;
+        outColor = cubecolor * diffuse;
+    }
+</script>
+<script id="test-fs" type="notjs">
+    precision highp float;
+    varying vec3 outColor;
+	varying vec2 fTexCoord;
+	
+	uniform sampler2D texSampler1;
+    void main(void) {
+        
+		vec3 texColor=texture2D(texSampler1,fTexCoord).xyz;
+		gl_FragColor = 0.5*vec4(outColor,1.0)+0.5*vec4(texColor, 1.0);
+		
+    }
+</script>
+
+<!--graffiti shaders
+-->
+<script id="graf-vs" type="notjs">
+    precision highp float;
+
+    attribute vec3 vpos;
+    attribute vec3 vnormal;
+	attribute vec2 uvs;
+	
+    varying vec3 outColor;
+	varying vec2 fTexCoord;
+	varying vec3 normal2;
+	
+	
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform mat4 model;
+    uniform vec3 lightdir;
+    uniform vec3 cubecolor;
+
+    void main(void) {
+        gl_Position = proj * view * model * vec4(vpos, 1.0);
+        vec4 normal = normalize(model * vec4(vnormal,0.0));
+        float diffuse;
+		float dot1=abs(dot(normal, vec4(lightdir,0.0)));
+		if(lightdir.y>=0.0)
+		{
+			if(dot(normal, vec4(lightdir,0.0))>=0.0)
+			{diffuse = 0.2 + 0.4*abs(dot(normal, vec4(lightdir,0.0)))+0.4*dot1*dot1*dot1;}
+		}
+		else
+		{diffuse=0.2;}
+		fTexCoord=uvs;
+        outColor = cubecolor * diffuse;
+		normal2=vnormal;
+		
+    }
+</script>
+<script id="graf-fs" type="notjs">
+    precision highp float;
+    varying vec3 outColor;
+	varying vec2 fTexCoord;
+	varying vec3 normal2;
+	uniform vec3 lightdir;
+	
+	uniform sampler2D texSampler1;
+    void main(void) {
+        
+		vec3 texColor=texture2D(texSampler1,fTexCoord).xyz;
+		vec3 normal_temp=normalize(normal2+texColor);
+		vec3 color=vec3(1.0,0.0,0.0);
+		float d1=dot(normal_temp,lightdir);
+		//gl_FragColor = 0.5*vec4(outColor,1.0)+0.5*vec4(texColor, 1.0);
+		gl_FragColor = vec4(d1*color,1.0);
+    }
+</script>
+
+
+<!-- Special Ground Plane Shader - makes a boring
+  -- checkerboard
+  -->
+<script id="ground-vs" type="not-js">
+    precision highp float;
+
+    attribute vec3 vpos;
+    varying vec3 outPos;
+
+    uniform mat4 view;
+    uniform mat4 proj;
+
+    void main(void) {
+        gl_Position = proj * view * vec4(vpos, 1.0);
+        outPos = vpos;
+    }
+</script>
+<script id="ground-fs" type="notjs">
+
+    // note this is used for more than just the cube
+    precision highp float;
+    varying vec3 outPos;
+    void main(void) {
+        float xs = step(1.0,mod(outPos.x,2.0));
+        float zs = step(1.0,mod(outPos.z,2.0));
+        float ss = (xs>.5) ? zs : 1.0-zs;
+        gl_FragColor = mix(vec4(0.5,0.5,0.5,1),
+                           vec4(0.3,0.5,0.4,1),
+                           ss
+                           );
+
+    }
+</script>
+
+
+<script id="sat1-vs" type="notjs">
+    precision highp float;
+
+    attribute vec3 vpos;
+	attribute vec3 eye;
+    attribute vec3 vnormal;
+    varying vec3 outColor;
+
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform mat4 model;
+    uniform vec3 lightdir;
+    uniform vec3 cubecolor;
+	
+
+    void main(void) {
+		vec4 eye=vec4(0.0,0.0,-1.0,0.0);
+		eye=model*eye;
+		eye=normalize(eye);
+        gl_Position = proj * view * model * vec4(vpos, 1.0);
+        vec4 normal = normalize(model * vec4(vnormal,0.0));
+		vec4 h=normalize(eye+vec4(lightdir,0.0));
+		float diffuse;
+        float dot1=abs(dot(normal, h));
+		//float dot2=dot1*dot1*dot1*dot1*dot1*dot1;
+		float dot2=dot1*dot1;
+		if(lightdir.y>=0.0)
+		{
+			if(dot(normal, vec4(lightdir,0.0))>=0.0)
+			{diffuse = 0.2 + 0.4*abs(dot(normal, vec4(lightdir,0.0)))+0.4*dot2;}
+		}
+		else
+		{diffuse=0.2;}
+        outColor = cubecolor * (0.2+0.8*diffuse);
+		//outColor = cubecolor ;
+    }
+</script>
+<script id="sat1-fs" type="notjs">
+
+    precision highp float;
+    varying vec3 outColor;
+    void main(void) {
+        gl_FragColor = vec4(outColor, 1.0);
+    }
+</script>
+
+<script id="trial1-vs" type="notjs">
+    precision highp float;
+
+    attribute vec3 vpos;
+    attribute vec3 vnormal;
+    varying vec3 outColor;
+	uniform vec3 text_coordinates;
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform mat4 model;
+    uniform vec3 lightdir;
+    uniform vec3 cubecolor;
+
+    void main(void) {
+        gl_Position = proj * view * model * vec4(vpos, 1.0);
+        vec4 normal = normalize(model * vec4(vnormal,0.0));
+        float diffuse;
+		float dot1=abs(dot(normal, vec4(lightdir,0.0)));
+		if(lightdir.y>=0.0)
+		{
+			if(dot(normal, vec4(lightdir,0.0))>=0.0)
+			{diffuse = 0.2 + 0.4*abs(dot(normal, vec4(lightdir,0.0)))+0.4*dot1*dot1*dot1;}
+		}
+		else
+		{diffuse=0.2;}
+        outColor = cubecolor * diffuse;
+    }
+</script>
+<script id="trial1-fs" type="notjs">
+    precision highp float;
+    varying vec3 outColor;
+    void main(void) {
+        gl_FragColor = vec4(outColor, 1.0);
+    }
+</script>
+
+
+<script id="heli-vs" type="notjs">
+    precision highp float;
+
+    attribute vec3 vpos;
+	attribute vec3 eye;
+    attribute vec3 vnormal;
+    varying vec3 outColor;
+
+    uniform mat4 view;
+    uniform mat4 proj;
+    uniform mat4 model;
+    uniform vec3 lightdir;
+    uniform vec3 cubecolor;
+	
+
+    void main(void) {
+		vec4 eye=vec4(0.0,0.0,-1.0,0.0);
+		eye=model*eye;
+		eye=normalize(eye);
+        gl_Position = proj * view * model * vec4(vpos, 1.0);
+        vec4 normal = normalize(model * vec4(vnormal,0.0));
+		vec4 h=normalize(eye+vec4(lightdir,0.0));
+		float diffuse;
+        float dot1=abs(dot(normal, h));
+		//float dot2=dot1*dot1*dot1*dot1*dot1*dot1;
+		float dot2=dot1*dot1;
+		if(lightdir.y>=0.0)
+		{
+			if(dot(normal, vec4(lightdir,0.0))>=0.0)
+			{diffuse = 0.2 + 0.4*abs(dot(normal, vec4(lightdir,0.0)))+0.4*dot2;}
+		}
+		else
+		{diffuse=0.2;}
+        outColor = cubecolor * diffuse;
+    }
+</script>
+<script id="heli-fs" type="notjs">
+
+    precision highp float;
+    varying vec3 outColor;
+    void main(void) {
+        gl_FragColor = vec4(outColor, 1.0);
+    }
+</script>
+
+
+</html>
